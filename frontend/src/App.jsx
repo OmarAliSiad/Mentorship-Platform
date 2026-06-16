@@ -1,8 +1,9 @@
 import React from 'react'
+import AuthPage from './AuthPage.jsx'
 
 const App = () => {
   return (
-    <div>App</div>
+    <AuthPage />
   )
 }
 
