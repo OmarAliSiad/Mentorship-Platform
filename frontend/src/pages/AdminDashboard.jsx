@@ -28,6 +28,7 @@ async function api(path, options = {}) {
 
 function Shell({ children }) {
   const logout = useAuthStore((state) => state.logout)
+  const { pathname } = useLocation()
   const nav = [
     ['Dashboard', '/admin', LayoutDashboard],
     ['Users', '/admin/users', Users],
@@ -48,12 +49,14 @@ function Shell({ children }) {
                 key={to}
                 to={to}
                 end={to === '/admin'}
-                className={({ isActive }) =>
-                  cn(
+                className={({ isActive }) => {
+                  // ponytail: robust check supporting both singular and plural admin stack path forms
+                  const active = isActive || (to === '/admin/stacks' && (pathname.includes('/stacks') || pathname.includes('/stack')))
+                  return cn(
                     'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground',
-                    isActive && 'bg-muted text-foreground',
+                    active && 'bg-muted text-foreground',
                   )
-                }
+                }}
               >
                 <Icon className="size-4" /> {label}
               </NavLink>
@@ -145,7 +148,10 @@ function UsersPage() {
   const [action, setAction] = React.useState(null)
 
   React.useEffect(() => {
-    api('/admin/users').then(setUsers).catch((error) => toast.error(error.message)).finally(() => setLoading(false))
+    api('/admin/users')
+      .then((data) => setUsers(Array.isArray(data) ? data : []))
+      .catch((error) => toast.error(error.message))
+      .finally(() => setLoading(false))
   }, [])
 
   const filtered = users.filter((user) => `${user.name || ''} ${user.email} ${user.role} ${user.status}`.toLowerCase().includes(query.toLowerCase()))
@@ -197,8 +203,15 @@ function StacksPage() {
   const [editing, setEditing] = React.useState(null)
   const [action, setAction] = React.useState(null)
 
-  const load = () => api('/stacks').then(setStacks).catch((error) => toast.error(error.message)).finally(() => setLoading(false))
-  React.useEffect(load, [])
+  const load = () => {
+    api('/stacks')
+      .then((data) => setStacks(Array.isArray(data) ? data : []))
+      .catch((error) => toast.error(error.message))
+      .finally(() => setLoading(false))
+  }
+  React.useEffect(() => {
+    load()
+  }, [])
 
   const save = async (event) => {
     event.preventDefault()
@@ -289,6 +302,10 @@ function Pager({ page, pages, setPage }) {
 
 export default function AdminDashboard() {
   const { pathname } = useLocation()
-  const page = pathname.endsWith('/users') ? <UsersPage /> : pathname.endsWith('/stacks') ? <StacksPage /> : pathname.endsWith('/statistics') ? <Statistics /> : <Dashboard />
+  // ponytail: support singular/plural and trailing slash path formats for users, stacks, and statistics
+  const isUsers = pathname.includes('/users')
+  const isStacks = pathname.includes('/stacks') || pathname.includes('/stack')
+  const isStatistics = pathname.includes('/statistics')
+  const page = isUsers ? <UsersPage /> : isStacks ? <StacksPage /> : isStatistics ? <Statistics /> : <Dashboard />
   return <Shell>{page}</Shell>
 }
