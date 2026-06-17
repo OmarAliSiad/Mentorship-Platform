@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { useAuthStore } from './store/authStore'
@@ -9,8 +10,9 @@ import MentorSearch from './pages/MentorSearch'
 import MentorProfile from './pages/MentorProfile'
 import StudentDashboard from './pages/StudentDashboard'
 import MentorDashboard from './pages/MentorDashboard'
-import AdminDashboard from './pages/AdminDashboard'
 import NotFound from './pages/NotFound'
+
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 
 const ProtectedRoute = ({ children, allowedRole }) => {
   const { isAuthenticated, user } = useAuthStore()
@@ -27,7 +29,7 @@ const PublicRoute = ({ children }) => {
   if (isAuthenticated) {
     if (user.role === 'Student') return <Navigate to="/student/dashboard" replace />
     if (user.role === 'Mentor') return <Navigate to="/mentor/dashboard" replace />
-    if (user.role === 'Admin') return <Navigate to="/admin/dashboard" replace />
+    if (user.role === 'Admin') return <Navigate to="/admin" replace />
   }
   
   return children
@@ -91,10 +93,12 @@ export default function App() {
           }
         />
         <Route
-          path="/admin/dashboard"
+          path="/admin/*"
           element={
             <ProtectedRoute allowedRole="Admin">
-              <AdminDashboard />
+              <Suspense fallback={<main className="min-h-screen bg-background p-8 text-foreground">Loading admin...</main>}>
+                <AdminDashboard />
+              </Suspense>
             </ProtectedRoute>
           }
         />
@@ -104,4 +108,4 @@ export default function App() {
       <Toaster theme="dark" position="bottom-right" />
     </BrowserRouter>
   )
-}
+}

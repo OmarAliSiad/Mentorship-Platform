@@ -2,9 +2,11 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
+  name: { type: String, trim: true },
   email: { type: String, required: true, unique: true },
   password_hash: { type: String, required: true },
-  role: { type: String, enum: ['Admin', 'Mentor', 'Student'], required: true }
+  role: { type: String, enum: ['Admin', 'Mentor', 'Student'], required: true },
+  status: { type: String, enum: ['pending', 'approved', 'blocked'], default: 'approved' }
 }, { timestamps: { createdAt: 'created_at', updatedAt: false } });
 
 // Pre-save hook to hash passwords
