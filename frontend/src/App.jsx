@@ -4,13 +4,13 @@ import { Toaster } from 'sonner'
 import { useAuthStore } from './store/authStore'
 
 import { PublicLayout } from './layouts/PublicLayout'
-import AuthPage from './pages/AuthPage'
-import LandingPage from './pages/LandingPage'
-import MentorSearch from './pages/MentorSearch'
-import MentorProfile from './pages/MentorProfile'
-import StudentDashboard from './pages/StudentDashboard'
-import MentorDashboard from './pages/MentorDashboard'
-import NotFound from './pages/NotFound'
+const AuthPage = lazy(() => import('./pages/AuthPage'))
+const LandingPage = lazy(() => import('./pages/LandingPage'))
+const MentorSearch = lazy(() => import('./pages/MentorSearch'))
+const MentorProfile = lazy(() => import('./pages/MentorProfile'))
+const StudentDashboard = lazy(() => import('./pages/StudentDashboard'))
+const MentorDashboard = lazy(() => import('./pages/MentorDashboard'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 
@@ -38,7 +38,8 @@ const PublicRoute = ({ children }) => {
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense fallback={<div className="h-screen w-full flex items-center justify-center bg-background"><div className="animate-pulse text-muted-foreground text-xl">Loading platform module...</div></div>}>
+        <Routes>
         {/* Public pages — wrapped with FloatingNav + Footer */}
         <Route
           path="/"
@@ -80,7 +81,9 @@ export default function App() {
           path="/student/dashboard"
           element={
             <ProtectedRoute allowedRole="Student">
-              <StudentDashboard />
+              <PublicLayout>
+                <StudentDashboard />
+              </PublicLayout>
             </ProtectedRoute>
           }
         />
@@ -88,7 +91,9 @@ export default function App() {
           path="/mentor/dashboard"
           element={
             <ProtectedRoute allowedRole="Mentor">
-              <MentorDashboard />
+              <PublicLayout>
+                <MentorDashboard />
+              </PublicLayout>
             </ProtectedRoute>
           }
         />
@@ -104,7 +109,8 @@ export default function App() {
         />
 
         <Route path="*" element={<NotFound />} />
-      </Routes>
+        </Routes>
+      </Suspense>
       <Toaster theme="dark" position="bottom-right" />
     </BrowserRouter>
   )
