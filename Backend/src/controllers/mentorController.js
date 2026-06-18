@@ -1,5 +1,6 @@
 import MentorProfile from '../models/MentorProfile.js';
 import MentorAvailability from '../models/MentorAvailability.js';
+import Session from '../models/Session.js';
 import mongoose from 'mongoose';
 
 const handleControllerError = (res, error, context) => {
@@ -295,5 +296,167 @@ export const deleteMentorAvailability = async (req, res) => {
     });
   } catch (error) {
     handleControllerError(res, error, 'deleting mentor availability');
+  }
+};
+
+export const getMentorSessions = async (req, res) => {
+  try {
+    const mentorProfile = await MentorProfile.findOne({ user_id: req.user._id });
+
+    if (!mentorProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mentor profile not found'
+      });
+    }
+
+    const sessions = await Session.find({ mentor_id: mentorProfile._id })
+      .populate('student_id', 'name email')
+      .sort({ scheduled_date: 1, start_time: 1 });
+
+    res.json({
+      success: true,
+      sessions
+    });
+  } catch (error) {
+    handleControllerError(res, error, 'fetching mentor sessions');
+  }
+};
+
+export const updateSessionNotes = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid session id'
+      });
+    }
+
+    const mentorProfile = await MentorProfile.findOne({ user_id: req.user._id });
+
+    if (!mentorProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mentor profile not found'
+      });
+    }
+
+    const session = await Session.findById(req.params.id);
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session not found'
+      });
+    }
+
+    if (session.mentor_id.toString() !== mentorProfile._id.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session not found'
+      });
+    }
+
+    if (
+      typeof req.body.mentor_notes !== 'string' ||
+      !req.body.mentor_notes.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'mentor_notes is required'
+      });
+    }
+
+    session.mentor_notes = req.body.mentor_notes;
+    await session.save();
+
+    res.json({
+      success: true,
+      session
+    });
+  } catch (error) {
+    handleControllerError(res, error, 'updating session notes');
+  }
+};
+
+export const updateSessionStatus = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid session id'
+      });
+    }
+
+    const mentorProfile = await MentorProfile.findOne({ user_id: req.user._id });
+
+    if (!mentorProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mentor profile not found'
+      });
+    }
+
+    const session = await Session.findById(req.params.id);
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session not found'
+      });
+    }
+
+    if (session.mentor_id.toString() !== mentorProfile._id.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session not found'
+      });
+    }
+
+    const { status } = req.body;
+
+    if (status !== 'completed' && status !== 'canceled') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status'
+      });
+    }
+
+    session.status = status;
+    await session.save();
+
+    res.json({
+      success: true,
+      session
+    });
+  } catch (error) {
+    handleControllerError(res, error, 'updating session status');
+  }
+};
+
+export const getMentorSessionHistory = async (req, res) => {
+  try {
+    const mentorProfile = await MentorProfile.findOne({ user_id: req.user._id });
+
+    if (!mentorProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mentor profile not found'
+      });
+    }
+
+    const sessions = await Session.find({
+      mentor_id: mentorProfile._id,
+      status: { $in: ['completed', 'canceled'] }
+    })
+      .populate('student_id', 'name email')
+      .sort({ scheduled_date: -1 });
+
+    res.json({
+      success: true,
+      sessions
+    });
+  } catch (error) {
+    handleControllerError(res, error, 'fetching mentor session history');
   }
 };
