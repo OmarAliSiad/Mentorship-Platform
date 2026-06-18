@@ -238,3 +238,42 @@ export const updateMentorAvailability = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+export const deleteMentorAvailability = async (req, res) => {
+  try {
+    const mentorProfile = await MentorProfile.findOne({ user_id: req.user._id });
+
+    if (!mentorProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mentor profile not found'
+      });
+    }
+
+    const availabilitySlot = await MentorAvailability.findById(req.params.id);
+
+    if (!availabilitySlot) {
+      return res.status(404).json({
+        success: false,
+        message: 'Availability slot not found'
+      });
+    }
+
+    if (availabilitySlot.mentor_id.toString() !== mentorProfile._id.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Availability slot not found'
+      });
+    }
+
+    await MentorAvailability.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Availability slot deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting mentor availability:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
