@@ -11,6 +11,7 @@ const MentorDashboard = () => {
   const [profile, setProfile] = useState(null);
   const [availability, setAvailability] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Form State
@@ -32,11 +33,12 @@ const MentorDashboard = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [profRes, availRes, sessRes, stackRes] = await Promise.all([
+        const [profRes, availRes, sessRes, stackRes, histRes] = await Promise.all([
           fetch('http://localhost:5005/api/mentor/profile', { headers: { 'Authorization': `Bearer ${token}` } }),
           fetch('http://localhost:5005/api/mentor/availability', { headers: { 'Authorization': `Bearer ${token}` } }),
           fetch('http://localhost:5005/api/mentor/sessions', { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch('http://localhost:5005/api/stacks', { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch('http://localhost:5005/api/stacks', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch('http://localhost:5005/api/mentor/sessions/history', { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         if (profRes.ok) {
@@ -62,7 +64,13 @@ const MentorDashboard = () => {
 
         if (sessRes.ok) {
           const sData = await sessRes.json();
-          setSessions(sData.sessions);
+          // Filter to only show scheduled sessions in the sessions tab
+          setSessions(sData.sessions.filter(s => s.status === 'scheduled'));
+        }
+
+        if (histRes.ok) {
+          const hData = await histRes.json();
+          setHistory(hData.sessions);
         }
 
         if (stackRes.ok) {
@@ -149,7 +157,23 @@ const MentorDashboard = () => {
       const data = await res.json();
       if (data.success) {
         toast.success(`Session ${status}`);
-        setSessions(sessions.map(s => s._id === id ? { ...s, status } : s));
+        
+        setSessions(prev => {
+          const targetSession = prev.find(s => s._id === id);
+          if (targetSession) {
+            const updatedSession = { ...data.session, student_id: targetSession.student_id };
+            
+            setHistory(prevHist => {
+              return [updatedSession, ...prevHist].sort((a, b) => {
+                const dateA = new Date(`${a.scheduled_date.split('T')[0]}T${a.start_time}`);
+                const dateB = new Date(`${b.scheduled_date.split('T')[0]}T${b.start_time}`);
+                return dateB - dateA;
+              });
+            });
+          }
+          return prev.filter(s => s._id !== id);
+        });
+
       } else {
         toast.error(data.message || 'Update failed');
       }
@@ -160,15 +184,19 @@ const MentorDashboard = () => {
 
   const handleUpdateNotes = async (id) => {
     try {
+      const existingSession = sessions.find(s => s._id === id) || history.find(s => s._id === id);
+      const notesToSave = notesDraft[id] !== undefined ? notesDraft[id] : (existingSession?.mentor_notes || '');
+
       const res = await fetch(`http://localhost:5005/api/mentor/sessions/${id}/notes`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ mentor_notes: notesDraft[id] })
+        body: JSON.stringify({ mentor_notes: notesToSave })
       });
       const data = await res.json();
       if (data.success) {
         toast.success('Notes saved');
-        setSessions(sessions.map(s => s._id === id ? { ...s, mentor_notes: notesDraft[id] } : s));
+        setSessions(prev => prev.map(s => s._id === id ? { ...s, mentor_notes: notesToSave } : s));
+        setHistory(prev => prev.map(s => s._id === id ? { ...s, mentor_notes: notesToSave } : s));
       } else {
         toast.error(data.message || 'Update failed');
       }
@@ -184,7 +212,7 @@ const MentorDashboard = () => {
       </div>
 
       <div className="flex border-b border-border-subtle mb-8">
-        {['profile', 'availability', 'sessions'].map((tab) => (
+        {['profile', 'availability', 'sessions', 'history'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -315,6 +343,52 @@ const MentorDashboard = () => {
                       <p className="text-xs uppercase text-muted-foreground font-semibold mb-1">Student Context</p>
                       <p className="text-sm">{session.submission_description}</p>
                     </div>
+
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground font-semibold mb-1">Your Evaluation Notes</p>
+                      <div className="flex gap-2">
+                        <textarea 
+                          rows={2} 
+                          placeholder="Provide feedback..."
+                          className="flex-1 bg-surface-base border border-border-subtle rounded-md px-3 py-2 text-sm text-white"
+                          value={notesDraft[session._id] !== undefined ? notesDraft[session._id] : (session.mentor_notes || '')}
+                          onChange={e => setNotesDraft({ ...notesDraft, [session._id]: e.target.value })}
+                        ></textarea>
+                        <button onClick={() => handleUpdateNotes(session._id)} className="bg-surface-hover border border-border-subtle px-4 rounded-md text-sm hover:bg-white hover:text-black transition-colors">Save Notes</button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* HISTORY TAB */}
+          {activeTab === 'history' && profile && (
+            <div className="space-y-4">
+              {history.length === 0 ? (
+                <div className="glass-panel p-12 text-center text-muted-foreground">No completed or canceled sessions found.</div>
+              ) : (
+                history.map(session => (
+                  <div key={session._id} className="glass-panel p-6">
+                    <div className="flex flex-col md:flex-row justify-between mb-4">
+                      <div>
+                        <h3 className="font-bold text-lg text-white">Session with {session.student_id?.name || 'Student'}</h3>
+                        <p className="text-muted-foreground font-mono text-sm">{new Date(session.scheduled_date).toLocaleDateString()} | {session.start_time} - {session.end_time}</p>
+                      </div>
+                      <div className="mt-2 md:mt-0 flex items-center gap-2">
+                        <span className={`px-3 py-1 text-xs uppercase tracking-wider font-semibold rounded-pill ${session.status === 'scheduled' ? 'bg-orange-500/20 text-orange-500' : session.status === 'canceled' ? 'bg-destructive/20 text-destructive' : 'bg-green-500/20 text-green-400'}`}>
+                          {session.status}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {session.submission_description && (
+                      <div className="bg-surface-base p-4 rounded-lg border border-border-subtle mb-4">
+                        <p className="text-xs uppercase text-muted-foreground font-semibold mb-1">Student Context</p>
+                        <p className="text-sm">{session.submission_description}</p>
+                      </div>
+                    )}
 
                     <div>
                       <p className="text-xs uppercase text-muted-foreground font-semibold mb-1">Your Evaluation Notes</p>
