@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import MentorProfile from '../models/MentorProfile.js';
 import MentorAvailability from '../models/MentorAvailability.js';
 import Session from '../models/Session.js';
@@ -61,6 +62,53 @@ export const bookSession = async (req, res) => {
   try {
     const { mentor_id, scheduled_date, start_time, end_time, submission_description } = req.body;
     const student_id = req.user.id;
+
+    if (!mentor_id || !mongoose.Types.ObjectId.isValid(mentor_id)) {
+      return res.status(400).json({ message: 'Invalid mentor_id.' });
+    }
+
+    const dateObj = new Date(scheduled_date);
+    if (isNaN(dateObj)) {
+      return res.status(400).json({ message: 'Invalid scheduled_date.' });
+    }
+
+    // Helper to convert HH:MM to minutes for safe comparison
+    const timeToMinutes = (timeStr) => {
+      if (!timeStr || !timeStr.includes(':')) return 0;
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const requestedStart = timeToMinutes(start_time);
+    const requestedEnd = timeToMinutes(end_time);
+
+    if (requestedEnd <= requestedStart) {
+      return res.status(400).json({ message: 'end_time must be after start_time.' });
+    }
+
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayOfWeek = days[dateObj.getUTCDay()];
+
+    // Get mentor availability for the requested day
+    const availabilities = await MentorAvailability.find({
+      mentor_id,
+      day_of_week: dayOfWeek
+    });
+
+    if (availabilities.length === 0) {
+      return res.status(400).json({ message: `Mentor is not available on ${dayOfWeek}s.` });
+    }
+
+    // Check if requested time falls fully within any of the slots
+    const isWithinSlot = availabilities.some(slot => {
+      const slotStart = timeToMinutes(slot.start_time);
+      const slotEnd = timeToMinutes(slot.end_time);
+      return requestedStart >= slotStart && requestedEnd <= slotEnd;
+    });
+
+    if (!isWithinSlot) {
+      return res.status(400).json({ message: 'Requested time is outside the mentor\'s availability slots.' });
+    }
 
     // Check overlap
     const overlappingSession = await Session.findOne({
