@@ -1,5 +1,6 @@
 import MentorProfile from '../models/MentorProfile.js';
 import MentorAvailability from '../models/MentorAvailability.js';
+import mongoose from 'mongoose';
 
 export const getMentorProfile = async (req, res) => {
   try {
@@ -162,6 +163,13 @@ export const createMentorAvailability = async (req, res) => {
 
 export const updateMentorAvailability = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid availability slot id'
+      });
+    }
+
     const { day_of_week, start_time, end_time } = req.body;
 
     const mentorProfile = await MentorProfile.findOne({ user_id: req.user._id });
@@ -241,6 +249,13 @@ export const updateMentorAvailability = async (req, res) => {
 
 export const deleteMentorAvailability = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid availability slot id'
+      });
+    }
+
     const mentorProfile = await MentorProfile.findOne({ user_id: req.user._id });
 
     if (!mentorProfile) {
