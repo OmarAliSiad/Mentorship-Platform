@@ -2,6 +2,17 @@ import MentorProfile from '../models/MentorProfile.js';
 import MentorAvailability from '../models/MentorAvailability.js';
 import mongoose from 'mongoose';
 
+const handleControllerError = (res, error, context) => {
+  console.error(`Error ${context}:`, error);
+  if (error.name === 'ValidationError') {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+  if (error.name === 'CastError') {
+    return res.status(400).json({ success: false, message: `Invalid ${error.path}: ${error.value}` });
+  }
+  res.status(500).json({ success: false, message: 'Server error' });
+};
+
 export const getMentorProfile = async (req, res) => {
   try {
     const mentorProfile = await MentorProfile.findOne({ user_id: req.user._id })
@@ -28,8 +39,7 @@ export const getMentorProfile = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching mentor profile:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    handleControllerError(res, error, 'fetching mentor profile');
   }
 };
 
@@ -74,8 +84,7 @@ export const updateMentorProfile = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error updating mentor profile:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    handleControllerError(res, error, 'updating mentor profile');
   }
 };
 
@@ -98,8 +107,7 @@ export const getMentorAvailability = async (req, res) => {
       availability
     });
   } catch (error) {
-    console.error('Error fetching mentor availability:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    handleControllerError(res, error, 'fetching mentor availability');
   }
 };
 
@@ -156,8 +164,7 @@ export const createMentorAvailability = async (req, res) => {
       availability
     });
   } catch (error) {
-    console.error('Error creating mentor availability:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    handleControllerError(res, error, 'creating mentor availability');
   }
 };
 
@@ -242,8 +249,7 @@ export const updateMentorAvailability = async (req, res) => {
       availability: updatedAvailability
     });
   } catch (error) {
-    console.error('Error updating mentor availability:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    handleControllerError(res, error, 'updating mentor availability');
   }
 };
 
@@ -288,7 +294,6 @@ export const deleteMentorAvailability = async (req, res) => {
       message: 'Availability slot deleted successfully'
     });
   } catch (error) {
-    console.error('Error deleting mentor availability:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    handleControllerError(res, error, 'deleting mentor availability');
   }
 };
