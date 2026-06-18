@@ -60,7 +60,9 @@ export const updateMentorProfile = async (req, res) => {
       updateData,
       {
         new: true,
-        runValidators: true
+        runValidators: true,
+        upsert: true,
+        setDefaultsOnInsert: true
       }
     ).populate('stack_id');
 
