@@ -159,3 +159,82 @@ export const createMentorAvailability = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+export const updateMentorAvailability = async (req, res) => {
+  try {
+    const { day_of_week, start_time, end_time } = req.body;
+
+    const mentorProfile = await MentorProfile.findOne({ user_id: req.user._id });
+
+    if (!mentorProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mentor profile not found'
+      });
+    }
+
+    const availabilitySlot = await MentorAvailability.findById(req.params.id);
+
+    if (!availabilitySlot) {
+      return res.status(404).json({
+        success: false,
+        message: 'Availability slot not found'
+      });
+    }
+
+    if (availabilitySlot.mentor_id.toString() !== mentorProfile._id.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: 'Availability slot not found'
+      });
+    }
+
+    const updateData = {};
+    if (day_of_week !== undefined) updateData.day_of_week = day_of_week;
+    if (start_time !== undefined) updateData.start_time = start_time;
+    if (end_time !== undefined) updateData.end_time = end_time;
+
+    const newDayOfWeek = updateData.day_of_week || availabilitySlot.day_of_week;
+    const newStartTime = updateData.start_time || availabilitySlot.start_time;
+    const newEndTime = updateData.end_time || availabilitySlot.end_time;
+
+    if (newEndTime <= newStartTime) {
+      return res.status(400).json({
+        success: false,
+        message: 'end_time must be greater than start_time'
+      });
+    }
+
+    const existingSlots = await MentorAvailability.find({
+      mentor_id: mentorProfile._id,
+      day_of_week: newDayOfWeek,
+      _id: { $ne: req.params.id }
+    });
+
+    for (const slot of existingSlots) {
+      if (newStartTime < slot.end_time && newEndTime > slot.start_time) {
+        return res.status(400).json({
+          success: false,
+          message: 'Availability slot overlaps with an existing slot'
+        });
+      }
+    }
+
+    const updatedAvailability = await MentorAvailability.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    res.json({
+      success: true,
+      availability: updatedAvailability
+    });
+  } catch (error) {
+    console.error('Error updating mentor availability:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
