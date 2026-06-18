@@ -13,11 +13,23 @@ const mentorAvailabilitySchema = new mongoose.Schema({
   },
   start_time: { 
     type: String, 
-    required: true 
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+      },
+      message: 'start_time must be in HH:MM format'
+    }
   },
   end_time: { 
     type: String, 
-    required: true 
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+      },
+      message: 'end_time must be in HH:MM format'
+    }
   }
 }, { timestamps: true });
 
