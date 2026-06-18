@@ -4,11 +4,13 @@ import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.use(protect, authorizeRoles('Admin'));
-
-router.get('/', async (_req, res) => {
+// GET is accessible to any authenticated user (so mentors can see stacks)
+router.get('/', protect, async (_req, res) => {
   res.json(await Stack.find().sort({ name: 1 }));
 });
+
+// Admin-only routes
+router.use(protect, authorizeRoles('Admin'));
 
 router.post('/', async (req, res) => {
   const { name, description = '' } = req.body;
