@@ -18,7 +18,7 @@ const ProtectedRoute = ({ children, allowedRole }) => {
   const { isAuthenticated, user } = useAuthStore()
 
   if (!isAuthenticated) return <Navigate to="/login" replace />
-  if (allowedRole && user?.role !== allowedRole) return <Navigate to="/" replace />
+  if (allowedRole && user?.role !== allowedRole) return <Navigate to="/not-found" replace />
 
   return children
 }
