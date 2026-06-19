@@ -23,6 +23,7 @@ const MentorDashboard = () => {
   const [newDay, setNewDay] = useState('Monday');
   const [newStart, setNewStart] = useState('');
   const [newEnd, setNewEnd] = useState('');
+  const [editingSlotId, setEditingSlotId] = useState(null);
 
   const [notesDraft, setNotesDraft] = useState({});
 
@@ -109,24 +110,51 @@ const MentorDashboard = () => {
   };
 
   // Availability Handlers
-  const handleAddAvailability = async (e) => {
+  const handleSaveAvailability = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5005/api/mentor/availability', {
-        method: 'POST',
+      const url = editingSlotId 
+        ? `http://localhost:5005/api/mentor/availability/${editingSlotId}`
+        : 'http://localhost:5005/api/mentor/availability';
+      const method = editingSlotId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ day_of_week: newDay, start_time: newStart, end_time: newEnd })
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Slot added');
-        setAvailability([...availability, data.availability]);
+        toast.success(editingSlotId ? 'Slot updated' : 'Slot added');
+        if (editingSlotId) {
+          setAvailability(availability.map(a => a._id === editingSlotId ? data.availability : a));
+          setEditingSlotId(null);
+        } else {
+          setAvailability([...availability, data.availability]);
+        }
+        setNewDay('Monday');
+        setNewStart('');
+        setNewEnd('');
       } else {
-        toast.error(data.message || 'Failed to add slot');
+        toast.error(data.message || (editingSlotId ? 'Failed to update slot' : 'Failed to add slot'));
       }
     } catch {
       toast.error('Network error');
     }
+  };
+
+  const handleEditAvailability = (slot) => {
+    setEditingSlotId(slot._id);
+    setNewDay(slot.day_of_week);
+    setNewStart(slot.start_time);
+    setNewEnd(slot.end_time);
+  };
+
+  const cancelEdit = () => {
+    setEditingSlotId(null);
+    setNewDay('Monday');
+    setNewStart('');
+    setNewEnd('');
   };
 
   const handleDeleteAvailability = async (id) => {
@@ -305,8 +333,8 @@ const MentorDashboard = () => {
           {activeTab === 'availability' && profile && (
             <div className="grid md:grid-cols-2 gap-8">
               <div className="glass-panel p-6 md:p-8">
-                <h2 className="text-xl font-semibold mb-6">Add New Slot</h2>
-                <form onSubmit={handleAddAvailability} className="space-y-6">
+                <h2 className="text-xl font-semibold mb-6">{editingSlotId ? 'Edit Slot' : 'Add New Slot'}</h2>
+                <form onSubmit={handleSaveAvailability} className="space-y-6">
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2">Day of Week</label>
                     <select value={newDay} onChange={e => setNewDay(e.target.value)} className="w-full bg-card border border-border/60 rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
@@ -323,7 +351,16 @@ const MentorDashboard = () => {
                       <input type="time" value={newEnd} onChange={e => setNewEnd(e.target.value)} required className="w-full bg-card border border-border/60 rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all [color-scheme:dark]" />
                     </div>
                   </div>
-                  <button type="submit" className="bg-primary text-primary-foreground font-semibold rounded-full px-8 py-3 hover:bg-primary/90 transition-colors w-full">Add Time Slot</button>
+                  <div className="flex gap-3">
+                    <button type="submit" className="bg-primary text-primary-foreground font-semibold rounded-full px-8 py-3 hover:bg-primary/90 transition-colors flex-1">
+                      {editingSlotId ? 'Update Time Slot' : 'Add Time Slot'}
+                    </button>
+                    {editingSlotId && (
+                      <button type="button" onClick={cancelEdit} className="bg-muted text-muted-foreground font-semibold rounded-full px-8 py-3 hover:bg-muted/80 transition-colors">
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </form>
               </div>
 
@@ -344,8 +381,9 @@ const MentorDashboard = () => {
                     {availability.map(slot => (
                       <li key={slot._id} className="flex justify-between items-center p-4 bg-card/50 border border-border/60 rounded-2xl hover:bg-card/70 transition-colors">
                         <span className="font-semibold text-foreground">{slot.day_of_week}</span>
-                        <div className="flex items-center gap-4">
-                          <span className="text-primary font-mono text-sm">{slot.start_time} - {slot.end_time}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-primary font-mono text-sm mr-2">{slot.start_time} - {slot.end_time}</span>
+                          <button onClick={() => handleEditAvailability(slot)} className="text-foreground text-sm hover:text-primary transition-colors px-4 py-2 rounded-full hover:bg-primary/10 font-medium">Edit</button>
                           <button onClick={() => handleDeleteAvailability(slot._id)} className="text-destructive text-sm hover:text-destructive/80 transition-colors px-4 py-2 rounded-full hover:bg-destructive/10 font-medium">Delete</button>
                         </div>
                       </li>
