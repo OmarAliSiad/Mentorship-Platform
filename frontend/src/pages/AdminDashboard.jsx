@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Pagination } from '@/components/ui/pagination'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 
@@ -291,13 +292,11 @@ function Table({ heads, children }) {
 }
 
 function Pager({ page, pages, setPage }) {
-  return pages > 1 ? (
-    <div className="mt-4 flex items-center justify-end gap-2">
-      <Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</Button>
-      <span className="text-sm text-muted-foreground">{page} / {pages}</span>
-      <Button variant="outline" disabled={page === pages} onClick={() => setPage(page + 1)}>Next</Button>
+  return (
+    <div className="mt-4 flex justify-end">
+      <Pagination page={page} totalPages={pages} onPageChange={setPage} />
     </div>
-  ) : null
+  )
 }
 
 export default function AdminDashboard() {
