@@ -69,6 +69,40 @@
   --background-image-aurora-purple: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.4) 0%, transparent 60%);
 }
 
+@layer base {
+  /* Style native date/time pickers to use theme colors rather than browser defaults (pure black/white) */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    background-image: none;
+    background-color: currentColor;
+    opacity: 0.5;
+    cursor: pointer;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+  }
+  
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>');
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>');
+  }
+  
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>');
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>');
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator:hover,
+  input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    background-color: var(--primary);
+  }
+}
+
 /* COMPONENT UTILITIES 
   These are patterns identified in design.md that combine multiple 
   tokens and are best treated as utility classes.
@@ -86,7 +120,7 @@
 
   /* Primary solid button */
   .btn-primary {
-    @apply bg-accent-primary text-text-primary text-sm font-medium rounded-pill px-5 py-2 transition-transform active:scale-95;
+    @apply inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm text-sm font-medium rounded-full px-5 py-2 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
   }
 }
 
