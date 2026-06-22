@@ -1,12 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { toast } from 'sonner';
+import Avatar from '../components/ui/Avatar';
 
-const getInitials = (name) => {
-  if (!name) return 'M';
-  return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-};
+// Avatar fallback handled by Avatar component
 
 const generateAvailableDates = (availList) => {
   if (!availList || availList.length === 0) return [];
@@ -77,16 +75,24 @@ const getSlotsForDate = (dateStr, availList) => {
 const MentorProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuthStore();
   const token = user?.token;
+  const openReviewFromUrl = searchParams.get('review') === '1';
 
   const [mentor, setMentor] = useState(null);
   const [availability, setAvailability] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [reviewEligibility, setReviewEligibility] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
   const [description, setDescription] = useState('');
+  const [reviewFormOpen, setReviewFormOpen] = useState(openReviewFromUrl);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   // Derive available dates and slots from availability — avoids setState-in-effect antipattern
   const availableDates = useMemo(() => generateAvailableDates(availability), [availability]);
@@ -104,6 +110,7 @@ const MentorProfile = () => {
           const data = await res.json();
           setMentor(data.mentor);
           setAvailability(data.availability);
+          setReviews(data.reviews || []);
         } else {
           toast.error('Mentor not found');
           navigate('/mentors');
@@ -116,6 +123,37 @@ const MentorProfile = () => {
     };
     fetchMentor();
   }, [id, navigate]);
+
+  useEffect(() => {
+    const fetchReviewEligibility = async () => {
+      if (!token || user?.role !== 'Student') {
+        setReviewEligibility(null);
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:5005/api/student/mentors/${id}/review-eligibility`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          setReviewEligibility(null);
+          return;
+        }
+
+        const data = await res.json();
+        setReviewEligibility(data);
+
+        if (data.eligible && openReviewFromUrl) {
+          setReviewFormOpen(true);
+        }
+      } catch {
+        setReviewEligibility(null);
+      }
+    };
+
+    fetchReviewEligibility();
+  }, [id, token, user?.role, openReviewFromUrl]);
 
   const handleSlotClick = (slot) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -197,6 +235,66 @@ const MentorProfile = () => {
     }
   };
 
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!reviewEligibility?.eligible) {
+      return toast.error('Review is not available for this mentor yet.');
+    }
+
+    if (!Number.isInteger(reviewRating) || reviewRating < 1 || reviewRating > 5) {
+      return toast.error('Choose a rating from 1 to 5.');
+    }
+
+    if (!reviewComment.trim()) {
+      return toast.error('Please add a short review.');
+    }
+
+    setSubmittingReview(true);
+
+    try {
+      const res = await fetch(`http://localhost:5005/api/student/mentors/${id}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          rating: reviewRating,
+          comment: reviewComment
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setReviews(prev => [data.review, ...prev]);
+        setMentor(prev => ({
+          ...prev,
+          average_rating: data.mentor.average_rating,
+          review_count: data.mentor.review_count
+        }));
+        setReviewEligibility({
+          eligible: false,
+          has_completed_session: true,
+          has_existing_review: true,
+          reason: 'You have already reviewed this mentor.',
+          existing_review: data.review
+        });
+        setReviewComment('');
+        setReviewRating(5);
+        setReviewFormOpen(false);
+        toast.success('Review submitted.');
+      } else {
+        toast.error(data.message || 'Failed to submit review');
+      }
+    } catch {
+      toast.error('Network error while submitting review');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   if (loading) return <div className="text-center py-32 text-muted-foreground animate-pulse">Loading profile...</div>;
   if (!mentor) return null;
 
@@ -207,8 +305,8 @@ const MentorProfile = () => {
         <div className="glass-panel p-6 md:p-8">
           {/* Header section with Avatar */}
           <div className="flex flex-col md:flex-row gap-6 items-start md:items-center border-b border-border-subtle pb-6 mb-6">
-            <div className="size-24 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20 shrink-0 shadow-inner">
-              <span className="text-3xl font-bold text-primary">{getInitials(mentor.name)}</span>
+            <div className="shrink-0">
+              <Avatar src={mentor.avatar} name={mentor.name} className="w-24 h-24 rounded-full border-2 border-primary/20" />
             </div>
             <div className="flex-1">
               <h1 className="text-3xl font-bold tracking-tight text-foreground mb-1">{mentor.name}</h1>
@@ -240,6 +338,105 @@ const MentorProfile = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="glass-panel p-6 md:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Reviews</h2>
+              <p className="text-sm text-muted-foreground">
+                {mentor.review_count || 0} {(mentor.review_count || 0) === 1 ? 'review' : 'reviews'}
+              </p>
+            </div>
+            {reviewEligibility?.eligible && !reviewFormOpen && (
+              <button
+                type="button"
+                onClick={() => setReviewFormOpen(true)}
+                className="btn-primary px-5 py-2"
+              >
+                Write Review
+              </button>
+            )}
+          </div>
+
+          {reviewEligibility?.eligible && reviewFormOpen && (
+            <form onSubmit={handleReviewSubmit} className="mb-6 bg-background/50 border border-border-subtle rounded-md p-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-2 text-muted-foreground">Rating</label>
+                <div className="grid grid-cols-5 gap-2 max-w-xs">
+                  {[1, 2, 3, 4, 5].map(value => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setReviewRating(value)}
+                      className={`h-10 rounded-md border text-sm font-semibold transition-colors ${reviewRating === value
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-foreground border-border-subtle hover:border-primary/50'
+                        }`}
+                      aria-pressed={reviewRating === value}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-2 text-muted-foreground">Review</label>
+                <textarea
+                  required
+                  maxLength={1000}
+                  rows={4}
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  className="w-full bg-background border border-border-subtle rounded-md px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
+                  placeholder="Share what stood out from your session"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setReviewFormOpen(false)}
+                  className="px-5 py-2 rounded-md border border-border-subtle text-foreground hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingReview}
+                  className="btn-primary px-5 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingReview ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {user?.role === 'Student' && reviewEligibility && !reviewEligibility.eligible && reviewEligibility.reason && (
+            <p className="mb-5 text-sm text-muted-foreground bg-muted/30 border border-border-subtle rounded-md px-4 py-3">
+              {reviewEligibility.reason}
+            </p>
+          )}
+
+          {reviews.length === 0 ? (
+            <div className="bg-muted/30 border border-dashed border-border rounded-lg p-6 text-center">
+              <p className="text-muted-foreground italic">No reviews yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map(review => (
+                <div key={review._id} className="border border-border-subtle rounded-md p-4 bg-background/40">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <p className="font-semibold text-foreground">{review.student_id?.name || 'Student'}</p>
+                    <span className="text-sm font-semibold text-primary">★ {Number(review.rating).toFixed(1)}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{review.comment}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Availability Section */}
