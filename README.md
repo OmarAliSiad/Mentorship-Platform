@@ -4,7 +4,7 @@
 
 ## 📑 Table of Contents
 
-- [📝 Description](#-description)
+- [📝 Description](#description)
 - [📸 Screenshots](#-screenshots)
 - [🛠️ Tech Stack](#️-tech-stack)
 - [🏗️ Architecture](#️-architecture)
