@@ -4,19 +4,19 @@
 
 ## 📑 Table of Contents
 
-- [📝 Description](#description)
-- [📸 Screenshots](#screenshots)
-- [🛠️ Tech Stack](#tech-stack)
-- [🏗️ Architecture](#architecture)
-- [⚡ Quick Start](#quick-start)
-- [📦 Key Dependencies](#key-dependencies)
-- [🚀 Available Scripts](#available-scripts)
-- [🔌 API Endpoints](#api-endpoints)
-- [📁 Project Structure](#project-structure)
-- [⚙️ Development Setup](#development-setup)
-- [👥 Contributors](#contributors)
-- [🤝 Contributing](#contributing)
-- [📄 License](#license)
+- [📝 Description](#-description)
+- [📸 Screenshots](#-screenshots)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [🏗️ Architecture](#️-architecture)
+- [⚡ Quick Start](#-quick-start)
+- [📦 Key Dependencies](#-key-dependencies)
+- [🚀 Available Scripts](#-available-scripts)
+- [🌐 API Endpoints](#-api-endpoints)
+- [📁 Project Structure](#-project-structure)
+- [🛠️ Development Setup](#️-development-setup)
+- [👥 Contributors](#-contributors)
+- [🤝 Contributing](#-contributing)
+- [📜 License](#-license)
 
 ## 📝 Description
 
