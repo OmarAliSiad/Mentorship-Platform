@@ -1,12 +1,7 @@
 import * as React from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
-import { Blocks, ChartNoAxesColumn, LayoutDashboard, LogOut, ShieldCheck, Users } from 'lucide-react'
+import { Blocks, ChartNoAxesColumn, LayoutDashboard, Users } from 'lucide-react'
 import { toast } from 'sonner'
-
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Pagination } from '@/components/ui/pagination'
-import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5005/api'
@@ -27,118 +22,145 @@ async function api(path, options = {}) {
   return data
 }
 
-function Shell({ children }) {
-  const logout = useAuthStore((state) => state.logout)
-  const { pathname } = useLocation()
-  const nav = [
-    ['Dashboard', '/admin', LayoutDashboard],
-    ['Users', '/admin/users', Users],
-    ['Stacks', '/admin/stacks', Blocks],
-    ['Statistics', '/admin/statistics', ChartNoAxesColumn],
-  ]
+// ─── Shared primitives ────────────────────────────────────────────────────────
 
+function LoadingRows({ rows = 4 }) {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="grid min-h-screen md:grid-cols-[16rem_1fr]">
-        <aside className="border-b border-border bg-card/70 p-4 md:border-b-0 md:border-r">
-          <div className="mb-6 flex items-center gap-2 text-lg font-semibold">
-            <ShieldCheck className="size-5 text-primary" /> Admin
-          </div>
-          <nav className="flex gap-2 overflow-x-auto md:flex-col">
-            {nav.map(([label, to, Icon]) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={to === '/admin'}
-                className={({ isActive }) => {
-                  // ponytail: robust check supporting both singular and plural admin stack path forms
-                  const active = isActive || (to === '/admin/stacks' && (pathname.includes('/stacks') || pathname.includes('/stack')))
-                  return cn(
-                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground',
-                    active && 'bg-muted text-foreground',
-                  )
-                }}
-              >
-                <Icon className="size-4" /> {label}
-              </NavLink>
-            ))}
-          </nav>
-        </aside>
-        <section>
-          <header className="flex items-center justify-between border-b border-border px-4 py-4 md:px-8">
-            <div>
-              <p className="text-xs uppercase text-muted-foreground">Academic Mentorship</p>
-              <h1 className="text-xl font-semibold">Admin Console</h1>
-            </div>
-            <Button variant="outline" size="sm" onClick={logout}>
-              <LogOut className="size-4" /> Logout
-            </Button>
-          </header>
-          <div className="p-4 md:p-8">{children}</div>
-        </section>
-      </div>
-    </main>
+    <div className="space-y-3">
+      {Array.from({ length: rows }, (_, i) => (
+        <Skeleton key={i} className="h-12 w-full rounded-2xl" />
+      ))}
+    </div>
   )
 }
 
-function LoadingRows({ rows = 4 }) {
-  return Array.from({ length: rows }, (_, index) => <Skeleton key={index} className="h-12 w-full" />)
+function EmptyState({ children }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-border-subtle bg-muted/20 p-10 text-center text-sm text-muted-foreground">
+      {children}
+    </div>
+  )
 }
 
-function EmptyState({ children }) {
-  return <div className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">{children}</div>
+function SectionTitle({ children }) {
+  return <h2 className="text-xl font-semibold mb-6 text-foreground">{children}</h2>
+}
+
+function AdminInput({ className = '', ...props }) {
+  return (
+    <input
+      className={`w-full bg-card border border-border/60 rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${className}`}
+      {...props}
+    />
+  )
 }
 
 function ConfirmDialog({ action, onCancel, onConfirm }) {
   if (!action) return null
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-md border border-border bg-card p-5 shadow-lg">
-        <h2 className="font-semibold">Confirm change</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{action.label}</p>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button onClick={onConfirm}>Confirm</Button>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-background/60 p-4 backdrop-blur-sm">
+      <div className="glass-panel w-full max-w-sm p-6 shadow-xl">
+        <h2 className="font-semibold text-lg text-foreground mb-2">Confirm action</h2>
+        <p className="text-sm text-muted-foreground">{action.label}</p>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-5 py-2 rounded-full border border-border-subtle text-foreground hover:bg-muted transition-colors text-sm font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="btn-primary px-5 py-2"
+          >
+            Confirm
+          </button>
         </div>
       </div>
     </div>
   )
 }
 
-function Dashboard() {
+// ─── Stat Cards ───────────────────────────────────────────────────────────────
+
+function StatCard({ label, value, loading }) {
+  return (
+    <div className="glass-panel p-6">
+      <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">{label}</p>
+      {loading
+        ? <Skeleton className="h-10 w-24 rounded-xl mt-1" />
+        : <p className="text-4xl font-bold text-foreground">{value ?? 0}</p>
+      }
+    </div>
+  )
+}
+
+// ─── Overview tab ─────────────────────────────────────────────────────────────
+
+function Overview() {
   const [stats, setStats] = React.useState(null)
-  React.useEffect(() => { api('/admin/statistics').then(setStats).catch((error) => toast.error(error.message)) }, [])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    api('/admin/statistics')
+      .then(setStats)
+      .catch((e) => toast.error(e.message))
+      .finally(() => setLoading(false))
+  }, [])
+
   const cards = [
     ['Total Users', stats?.totalUsers],
     ['Total Mentors', stats?.totalMentors],
     ['Total Students', stats?.totalStudents],
     ['Total Sessions', stats?.totalSessions],
-    ['Technical Stacks', stats?.totalStacks],
+    ['Tech Stacks', stats?.totalStacks],
   ]
-  return <Cards items={cards} loading={!stats} />
+
+  return (
+    <div className="space-y-8">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {cards.map(([label, value]) => (
+          <StatCard key={label} label={label} value={value} loading={loading} />
+        ))}
+      </div>
+    </div>
+  )
 }
+
+// ─── Statistics tab ───────────────────────────────────────────────────────────
 
 function Statistics() {
   const [stats, setStats] = React.useState(null)
-  React.useEffect(() => { api('/admin/statistics').then(setStats).catch((error) => toast.error(error.message)) }, [])
-  return <Cards items={[
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    api('/admin/statistics')
+      .then(setStats)
+      .catch((e) => toast.error(e.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const cards = [
     ['Scheduled Sessions', stats?.scheduledSessions],
     ['Completed Sessions', stats?.completedSessions],
     ['Canceled Sessions', stats?.canceledSessions],
-  ]} loading={!stats} />
-}
+  ]
 
-function Cards({ items, loading }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-      {items.map(([label, value]) => (
-        <div key={label} className="rounded-md border border-border bg-card p-5">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          {loading ? <Skeleton className="mt-4 h-9 w-20" /> : <p className="mt-3 text-3xl font-semibold">{value ?? 0}</p>}
-        </div>
+    <div className="grid gap-4 sm:grid-cols-3">
+      {cards.map(([label, value]) => (
+        <StatCard key={label} label={label} value={value} loading={loading} />
       ))}
     </div>
   )
+}
+
+// ─── Users tab ────────────────────────────────────────────────────────────────
+
+const STATUS_STYLES = {
+  approved: 'bg-green-500/15 text-green-400 border border-green-500/20',
+  pending:  'bg-primary/10 text-primary border border-primary/20',
+  blocked:  'bg-destructive/15 text-destructive border border-destructive/20',
 }
 
 function UsersPage() {
@@ -151,51 +173,151 @@ function UsersPage() {
   React.useEffect(() => {
     api('/admin/users')
       .then((data) => setUsers(Array.isArray(data) ? data : []))
-      .catch((error) => toast.error(error.message))
+      .catch((e) => toast.error(e.message))
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = users.filter((user) => `${user.name || ''} ${user.email} ${user.role} ${user.status}`.toLowerCase().includes(query.toLowerCase()))
+  const filtered = users.filter((u) =>
+    `${u.name || ''} ${u.email} ${u.role} ${u.status}`.toLowerCase().includes(query.toLowerCase())
+  )
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const visible = filtered.slice((page - 1) * pageSize, page * pageSize)
 
   const updateStatus = async () => {
     try {
-      const user = await api(`/admin/users/${action.user._id}/status`, { method: 'PUT', body: JSON.stringify({ status: action.status }) })
-      setUsers((current) => current.map((item) => (item._id === user._id ? user : item)))
+      const updated = await api(`/admin/users/${action.user._id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: action.status }),
+      })
+      setUsers((cur) => cur.map((u) => (u._id === updated._id ? updated : u)))
       toast.success('User updated')
-    } catch (error) {
-      toast.error(error.message)
+    } catch (e) {
+      toast.error(e.message)
     } finally {
       setAction(null)
     }
   }
 
   return (
-    <Panel title="Users" query={query} setQuery={(value) => { setQuery(value); setPage(1) }}>
-      {loading ? <LoadingRows /> : visible.length ? (
-        <Table heads={['Name', 'Email', 'Role', 'Status', 'Actions']}>
-          {visible.map((user) => (
-            <tr key={user._id} className="border-t border-border">
-              <td className="p-3">{user.name || user.email?.split('@')[0]}</td>
-              <td className="p-3 text-muted-foreground">{user.email}</td>
-              <td className="p-3">{user.role}</td>
-              <td className="p-3 capitalize">{user.status || 'approved'}</td>
-              <td className="flex flex-wrap gap-2 p-3">
-                {user.role === 'Mentor' && user.status !== 'approved' ? <Button size="sm" onClick={() => setAction({ user, status: 'approved', label: `Approve ${user.email}?` })}>Approve</Button> : null}
-                {user.status === 'blocked'
-                  ? <Button size="sm" variant="outline" onClick={() => setAction({ user, status: 'approved', label: `Unblock ${user.email}?` })}>Unblock</Button>
-                  : <Button size="sm" variant="destructive" onClick={() => setAction({ user, status: 'blocked', label: `Block ${user.email}?` })}>Block</Button>}
-              </td>
-            </tr>
-          ))}
-        </Table>
-      ) : <EmptyState>No users found.</EmptyState>}
-      <Pager page={page} pages={pages} setPage={setPage} />
+    <div className="space-y-5">
+      {/* Header row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <SectionTitle>Users</SectionTitle>
+        <AdminInput
+          className="sm:w-64"
+          placeholder="Search users..."
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setPage(1) }}
+        />
+      </div>
+
+      {/* Table */}
+      <div className="glass-panel overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[42rem] text-left text-sm">
+            <thead>
+              <tr className="border-b border-border-subtle">
+                {['Name', 'Email', 'Role', 'Status', 'Actions'].map((h) => (
+                  <th key={h} className="px-5 py-4 text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="p-6">
+                    <LoadingRows />
+                  </td>
+                </tr>
+              ) : visible.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-6">
+                    <EmptyState>No users found.</EmptyState>
+                  </td>
+                </tr>
+              ) : (
+                visible.map((u) => (
+                  <tr key={u._id} className="border-t border-border-subtle hover:bg-muted/20 transition-colors">
+                    <td className="px-5 py-4 font-medium text-foreground">
+                      {u.name || u.email?.split('@')[0]}
+                    </td>
+                    <td className="px-5 py-4 text-muted-foreground">{u.email}</td>
+                    <td className="px-5 py-4">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border-subtle">
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${STATUS_STYLES[u.status] || STATUS_STYLES.approved}`}>
+                        {u.status || 'approved'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        {u.role === 'Mentor' && u.status !== 'approved' && (
+                          <button
+                            onClick={() => setAction({ user: u, status: 'approved', label: `Approve ${u.email}?` })}
+                            className="text-xs px-4 py-2 rounded-full bg-green-500/15 text-green-400 hover:bg-green-500 hover:text-white transition-colors font-medium border border-green-500/20"
+                          >
+                            Approve
+                          </button>
+                        )}
+                        {u.status === 'blocked' ? (
+                          <button
+                            onClick={() => setAction({ user: u, status: 'approved', label: `Unblock ${u.email}?` })}
+                            className="text-xs px-4 py-2 rounded-full border border-border-subtle text-foreground hover:bg-muted transition-colors font-medium"
+                          >
+                            Unblock
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setAction({ user: u, status: 'blocked', label: `Block ${u.email}?` })}
+                            className="text-xs px-4 py-2 rounded-full bg-destructive/15 text-destructive hover:bg-destructive hover:text-white transition-colors font-medium border border-destructive/20"
+                          >
+                            Block
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div className="flex justify-end items-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 rounded-full border border-border-subtle text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-muted-foreground px-2">
+            {page} / {pages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(pages, p + 1))}
+            disabled={page === pages}
+            className="px-4 py-2 rounded-full border border-border-subtle text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
       <ConfirmDialog action={action} onCancel={() => setAction(null)} onConfirm={updateStatus} />
-    </Panel>
+    </div>
   )
 }
+
+// ─── Stacks tab ───────────────────────────────────────────────────────────────
 
 function StacksPage() {
   const [stacks, setStacks] = React.useState([])
@@ -205,106 +327,187 @@ function StacksPage() {
   const [action, setAction] = React.useState(null)
 
   const load = () => {
+    setLoading(true)
     api('/stacks')
       .then((data) => setStacks(Array.isArray(data) ? data : []))
-      .catch((error) => toast.error(error.message))
+      .catch((e) => toast.error(e.message))
       .finally(() => setLoading(false))
   }
-  React.useEffect(() => {
-    load()
-  }, [])
 
-  const save = async (event) => {
-    event.preventDefault()
+  React.useEffect(() => { load() }, [])
+
+  const save = async (e) => {
+    e.preventDefault()
     try {
-      await api(editing ? `/stacks/${editing}` : '/stacks', { method: editing ? 'PUT' : 'POST', body: JSON.stringify(form) })
+      await api(editing ? `/stacks/${editing}` : '/stacks', {
+        method: editing ? 'PUT' : 'POST',
+        body: JSON.stringify(form),
+      })
       setForm({ name: '', description: '' })
       setEditing(null)
-      setLoading(true)
       load()
-      toast.success('Stack saved')
-    } catch (error) {
-      toast.error(error.message)
+      toast.success(editing ? 'Stack updated' : 'Stack created')
+    } catch (e) {
+      toast.error(e.message)
     }
   }
 
   const remove = async () => {
     try {
       await api(`/stacks/${action._id}`, { method: 'DELETE' })
-      setStacks((current) => current.filter((stack) => stack._id !== action._id))
+      setStacks((cur) => cur.filter((s) => s._id !== action._id))
       toast.success('Stack deleted')
-    } catch (error) {
-      toast.error(error.message)
+    } catch (e) {
+      toast.error(e.message)
     } finally {
       setAction(null)
     }
   }
 
   return (
-    <Panel title="Technical Stacks">
-      <form onSubmit={save} className="mb-6 grid gap-3 rounded-md border border-border bg-card p-4 md:grid-cols-[1fr_2fr_auto]">
-        <input className="rounded-md border border-input bg-background px-3 py-2" placeholder="Name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
-        <input className="rounded-md border border-input bg-background px-3 py-2" placeholder="Description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
-        <Button type="submit">{editing ? 'Update' : 'Create'}</Button>
-      </form>
-      {loading ? <LoadingRows /> : stacks.length ? (
-        <Table heads={['Name', 'Description', 'Actions']}>
-          {stacks.map((stack) => (
-            <tr key={stack._id} className="border-t border-border">
-              <td className="p-3">{stack.name}</td>
-              <td className="p-3 text-muted-foreground">{stack.description || '-'}</td>
-              <td className="flex gap-2 p-3">
-                <Button size="sm" variant="outline" onClick={() => { setEditing(stack._id); setForm({ name: stack.name, description: stack.description || '' }) }}>Edit</Button>
-                <Button size="sm" variant="destructive" onClick={() => setAction(stack)}>Delete</Button>
-              </td>
-            </tr>
-          ))}
-        </Table>
-      ) : <EmptyState>No stacks yet.</EmptyState>}
-      <ConfirmDialog action={action && { label: `Delete ${action.name}?` }} onCancel={() => setAction(null)} onConfirm={remove} />
-    </Panel>
-  )
-}
+    <div className="space-y-6">
+      <SectionTitle>Technical Stacks</SectionTitle>
 
-function Panel({ title, query, setQuery, children }) {
-  return (
-    <section>
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-semibold">{title}</h2>
-        {setQuery ? <input className="rounded-md border border-input bg-background px-3 py-2" placeholder="Search" value={query} onChange={(event) => setQuery(event.target.value)} /> : null}
+      {/* Create / Edit form */}
+      <div className="glass-panel p-6">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-4">
+          {editing ? 'Edit Stack' : 'Add New Stack'}
+        </p>
+        <form onSubmit={save} className="grid gap-3 md:grid-cols-[1fr_2fr_auto]">
+          <AdminInput
+            placeholder="Stack name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            required
+          />
+          <AdminInput
+            placeholder="Description (optional)"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+          <div className="flex gap-2">
+            <button type="submit" className="btn-primary px-6 py-3 whitespace-nowrap">
+              {editing ? 'Update' : 'Create'}
+            </button>
+            {editing && (
+              <button
+                type="button"
+                onClick={() => { setEditing(null); setForm({ name: '', description: '' }) }}
+                className="px-6 py-3 rounded-full border border-border-subtle text-foreground hover:bg-muted transition-colors text-sm font-medium"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
       </div>
-      {children}
-    </section>
-  )
-}
 
-function Table({ heads, children }) {
-  return (
-    <div className="overflow-x-auto rounded-md border border-border bg-card">
-      <table className="w-full min-w-[42rem] text-left text-sm">
-        <thead className="bg-muted text-muted-foreground">
-          <tr>{heads.map((head) => <th key={head} className="p-3 font-medium">{head}</th>)}</tr>
-        </thead>
-        <tbody>{children}</tbody>
-      </table>
+      {/* Stacks list */}
+      {loading ? (
+        <LoadingRows />
+      ) : stacks.length === 0 ? (
+        <EmptyState>No stacks yet. Add your first one above.</EmptyState>
+      ) : (
+        <div className="glass-panel overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[28rem] text-left text-sm">
+              <thead>
+                <tr className="border-b border-border-subtle">
+                  {['Name', 'Description', 'Actions'].map((h) => (
+                    <th key={h} className="px-5 py-4 text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {stacks.map((s) => (
+                  <tr key={s._id} className="border-t border-border-subtle hover:bg-muted/20 transition-colors">
+                    <td className="px-5 py-4 font-medium text-foreground">{s.name}</td>
+                    <td className="px-5 py-4 text-muted-foreground">{s.description || '—'}</td>
+                    <td className="px-5 py-4">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setEditing(s._id); setForm({ name: s.name, description: s.description || '' }) }}
+                          className="text-xs px-4 py-2 rounded-full border border-border-subtle text-foreground hover:bg-muted transition-colors font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setAction(s)}
+                          className="text-xs px-4 py-2 rounded-full bg-destructive/15 text-destructive hover:bg-destructive hover:text-white transition-colors font-medium border border-destructive/20"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        action={action && { label: `Delete the "${action.name}" stack? This cannot be undone.` }}
+        onCancel={() => setAction(null)}
+        onConfirm={remove}
+      />
     </div>
   )
 }
 
-function Pager({ page, pages, setPage }) {
-  return (
-    <div className="mt-4 flex justify-end">
-      <Pagination page={page} totalPages={pages} onPageChange={setPage} />
-    </div>
-  )
-}
+// ─── Root export ──────────────────────────────────────────────────────────────
+
+const TABS = [
+  { id: 'overview',    label: 'Overview',    Icon: LayoutDashboard },
+  { id: 'users',       label: 'Users',       Icon: Users           },
+  { id: 'stacks',      label: 'Stacks',      Icon: Blocks          },
+  { id: 'statistics',  label: 'Statistics',  Icon: ChartNoAxesColumn },
+]
 
 export default function AdminDashboard() {
-  const { pathname } = useLocation()
-  // ponytail: support singular/plural and trailing slash path formats for users, stacks, and statistics
-  const isUsers = pathname.includes('/users')
-  const isStacks = pathname.includes('/stacks') || pathname.includes('/stack')
-  const isStatistics = pathname.includes('/statistics')
-  const page = isUsers ? <UsersPage /> : isStacks ? <StacksPage /> : isStatistics ? <Statistics /> : <Dashboard />
-  return <Shell>{page}</Shell>
+  const [activeTab, setActiveTab] = React.useState('overview')
+
+  const page =
+    activeTab === 'users'      ? <UsersPage />   :
+    activeTab === 'stacks'     ? <StacksPage />  :
+    activeTab === 'statistics' ? <Statistics />  :
+                                 <Overview />
+
+  return (
+    <div className="container mx-auto px-4 pt-32 pb-12 max-w-7xl">
+      {/* Page header */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-8">
+        <div className="flex-1">
+          <h1 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tighter text-primary mb-2">
+            Admin Console
+          </h1>
+          <p className="text-muted-foreground text-base">Manage users, stacks, and platform health</p>
+        </div>
+      </div>
+
+      {/* Tab bar */}
+      <div className="flex border-b border-border/60 mb-8 gap-1 overflow-x-auto">
+        {TABS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`flex items-center gap-2 px-6 py-3 uppercase tracking-wider font-semibold text-sm transition-all rounded-full whitespace-nowrap ${
+              activeTab === id
+                ? 'text-primary bg-primary/10 border border-primary/20'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+          >
+            <Icon className="size-4" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      <div>{page}</div>
+    </div>
+  )
 }

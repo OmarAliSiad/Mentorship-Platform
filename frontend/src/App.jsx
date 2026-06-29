@@ -101,9 +101,9 @@ export default function App() {
           path="/admin/*"
           element={
             <ProtectedRoute allowedRole="Admin">
-              <Suspense fallback={<main className="min-h-screen bg-background p-8 text-foreground">Loading admin...</main>}>
+              <PublicLayout>
                 <AdminDashboard />
-              </Suspense>
+              </PublicLayout>
             </ProtectedRoute>
           }
         />
