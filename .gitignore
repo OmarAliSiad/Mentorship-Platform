@@ -1,2 +1,10 @@
 phases.md
 node_modules/
+docker-compose.yml
+admin Module Implementation.md
+error.log
+.gitignore
+nginx.conf
+vercel.json
+Dockerfile
+mentorship_platform_postman_collection.json
