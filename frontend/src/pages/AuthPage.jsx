@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Lock, Mail, Sparkles } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
