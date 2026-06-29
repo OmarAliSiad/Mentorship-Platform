@@ -192,7 +192,9 @@ const MentorDashboard = () => {
             const updatedSession = { ...data.session, student_id: targetSession.student_id };
             
             setHistory(prevHist => {
-              return [updatedSession, ...prevHist].sort((a, b) => {
+              // Deduplicate: remove any existing entry with the same id before prepending
+              const withoutStale = prevHist.filter(s => s._id !== id);
+              return [updatedSession, ...withoutStale].sort((a, b) => {
                 const dateA = new Date(`${a.scheduled_date.split('T')[0]}T${a.start_time}`);
                 const dateB = new Date(`${b.scheduled_date.split('T')[0]}T${b.start_time}`);
                 return dateB - dateA;

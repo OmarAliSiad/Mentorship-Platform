@@ -15,10 +15,16 @@ const getDashboardUrl = (role) => {
   return '/'
 }
 
+const getDashboardLabel = (role) => {
+  if (role === 'Student') return 'My Sessions'
+  if (role === 'Mentor') return 'My Workspace'
+  if (role === 'Admin') return 'Admin Console'
+  return 'Dashboard'
+}
+
 const navLinks = [
   { label: 'Find Mentors', to: '/mentors' },
   { label: 'Become a Mentor', to: '/login?intent=mentor' },
-  { label: 'Pricing', to: '/#cta' },
 ]
 
 function MentHubLogoMark() {
@@ -50,7 +56,10 @@ export function FloatingNav() {
   const location = useLocation()
 
   const dashUrl = user ? getDashboardUrl(user.role) : '/'
-  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : 'U'
+  const dashLabel = user ? getDashboardLabel(user.role) : 'Dashboard'
+  const initials = user?.name
+    ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    : user?.email ? user.email.slice(0, 2).toUpperCase() : 'U'
 
   const isNavActive = (to) => {
     if (to === '/mentors') return location.pathname.startsWith('/mentors')
@@ -58,6 +67,7 @@ export function FloatingNav() {
     if (to.startsWith('/login')) {
       return location.pathname === '/login' && location.search.includes('intent=mentor')
     }
+    if (to.startsWith('/admin')) return location.pathname.startsWith('/admin')
 
     return location.pathname === to
   }
@@ -92,7 +102,11 @@ export function FloatingNav() {
             } else if (user?.role === 'Student') {
               centerLinks = [ { label: 'Find Mentors', to: '/mentors' } ];
             } else if (user?.role === 'Mentor') {
-              centerLinks = [ { label: 'Find Mentors', to: '/mentors' } ];
+              centerLinks = []; // Mentors don't browse for mentors
+            } else if (user?.role === 'Admin') {
+              centerLinks = [
+                { label: 'Admin Console', to: '/admin' },
+              ];
             }
 
             return centerLinks.map(({ label, to }) => {
@@ -134,7 +148,7 @@ export function FloatingNav() {
                   to={dashUrl}
                   className="inline-flex h-10 items-center justify-center rounded-full border border-primary/30 bg-primary/15 px-4 text-sm font-medium text-primary transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary/20"
                 >
-                  Dashboard
+                  {dashLabel}
                 </Link>
                 <Link
                   to={dashUrl}
@@ -197,7 +211,11 @@ export function FloatingNav() {
             } else if (user?.role === 'Student') {
               mobileLinks = [ { label: 'Find Mentors', to: '/mentors' } ];
             } else if (user?.role === 'Mentor') {
-              mobileLinks = [ { label: 'Find Mentors', to: '/mentors' } ];
+              mobileLinks = []; // Mentors don't browse for mentors
+            } else if (user?.role === 'Admin') {
+              mobileLinks = [
+                { label: 'Admin Console', to: '/admin' },
+              ];
             }
 
             return mobileLinks.map(({ label, to }) => (
@@ -228,7 +246,7 @@ export function FloatingNav() {
                 <span className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                   {initials}
                 </span>
-                My Dashboard
+                {dashLabel}
               </Link>
               <button
                 onClick={() => {
