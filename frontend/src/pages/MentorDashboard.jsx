@@ -26,6 +26,7 @@ const MentorDashboard = () => {
   const [editingSlotId, setEditingSlotId] = useState(null);
 
   const [notesDraft, setNotesDraft] = useState({});
+  const [meetingLinkDraft, setMeetingLinkDraft] = useState({});
 
   const [stacks, setStacks] = useState([]);
   const [selectedStack, setSelectedStack] = useState('');
@@ -229,6 +230,31 @@ const MentorDashboard = () => {
         setHistory(prev => prev.map(s => s._id === id ? { ...s, mentor_notes: notesToSave } : s));
       } else {
         toast.error(data.message || 'Update failed');
+      }
+    } catch {
+      toast.error('Network error');
+    }
+  };
+
+  const handleUpdateMeetingLink = async (id) => {
+    const link = meetingLinkDraft[id] !== undefined
+      ? meetingLinkDraft[id]
+      : (sessions.find(s => s._id === id)?.meeting_link || '');
+
+    if (!link.trim()) return toast.error('Please enter a meeting link');
+
+    try {
+      const res = await fetch(`http://localhost:5005/api/mentor/sessions/${id}/link`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ meeting_link: link.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Meeting link saved — student can now join!');
+        setSessions(prev => prev.map(s => s._id === id ? { ...s, meeting_link: link.trim() } : s));
+      } else {
+        toast.error(data.message || 'Failed to save link');
       }
     } catch {
       toast.error('Network error');
@@ -480,26 +506,61 @@ const MentorDashboard = () => {
                       </div>
                     </div>
                     
-                    <div className="bg-card/50 p-5 rounded-2xl border border-border/60 mb-6">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Student Context</p>
-                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{session.submission_description}</p>
-                    </div>
+                    <div className="space-y-6">
+                      <div className="bg-card/50 p-5 rounded-2xl border border-border/60">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Student Context</p>
+                        <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{session.submission_description}</p>
+                      </div>
 
-                    <div>
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Your Evaluation Notes</p>
-                      <div className="flex flex-col gap-3">
-                        <textarea 
-                          rows={4} 
-                          placeholder="Provide feedback..."
-                          className="w-full bg-card border border-border/60 rounded-2xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y min-h-[100px]"
-                          value={notesDraft[session._id] !== undefined ? notesDraft[session._id] : (session.mentor_notes || '')}
-                          onChange={e => setNotesDraft({ ...notesDraft, [session._id]: e.target.value })}
-                        ></textarea>
-                        <div className="flex justify-end">
-                          <button onClick={() => handleUpdateNotes(session._id)} className="bg-primary text-primary-foreground font-semibold rounded-full px-8 py-3 hover:bg-primary/90 transition-colors">Save Notes</button>
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Meeting Link</p>
+                        <div className="flex flex-col gap-3">
+                          {session.meeting_link && (
+                            <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3">
+                              <svg className="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                              <a href={session.meeting_link} target="_blank" rel="noreferrer" className="text-sm text-primary underline underline-offset-2 truncate flex-1">{session.meeting_link}</a>
+                              <button
+                                onClick={() => { navigator.clipboard.writeText(session.meeting_link); toast.success('Link copied!'); }}
+                                className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0 px-2 py-1 rounded-lg hover:bg-muted"
+                                title="Copy link"
+                              >Copy</button>
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <input
+                              type="url"
+                              placeholder="https://meet.google.com/... or https://zoom.us/..."
+                              value={meetingLinkDraft[session._id] !== undefined ? meetingLinkDraft[session._id] : (session.meeting_link || '')}
+                              onChange={e => setMeetingLinkDraft({ ...meetingLinkDraft, [session._id]: e.target.value })}
+                              className="flex-1 bg-card border border-border/60 rounded-2xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                            />
+                            <button
+                              onClick={() => handleUpdateMeetingLink(session._id)}
+                              className="bg-primary text-primary-foreground font-semibold rounded-full px-6 py-3 hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                            >
+                              Save Link
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Your Evaluation Notes</p>
+                        <div className="flex flex-col gap-3">
+                          <textarea
+                            rows={4}
+                            placeholder="Provide feedback..."
+                            className="w-full bg-card border border-border/60 rounded-2xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y min-h-[100px]"
+                            value={notesDraft[session._id] !== undefined ? notesDraft[session._id] : (session.mentor_notes || '')}
+                            onChange={e => setNotesDraft({ ...notesDraft, [session._id]: e.target.value })}
+                          ></textarea>
+                          <div className="flex justify-end">
+                            <button onClick={() => handleUpdateNotes(session._id)} className="bg-primary text-primary-foreground font-semibold rounded-full px-8 py-3 hover:bg-primary/90 transition-colors">Save Notes</button>
+                          </div>
                         </div>
                       </div>
                     </div>
+
                   </div>
                 ))
               )}

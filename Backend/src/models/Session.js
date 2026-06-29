@@ -47,6 +47,11 @@ const sessionSchema = new mongoose.Schema({
   mentor_notes: {
     type: String,
     default: ''
+  },
+  meeting_link: {
+    type: String,
+    default: '',
+    trim: true
   }
 }, { timestamps: true });
 
