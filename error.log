@@ -1,0 +1,18 @@
+[2026-06-18T12:38:22.434170200+00:00] startup: base_url=https://chatgpt.com/backend-api path_style=wham
+[2026-06-18T12:38:22.440255200+00:00] auth: mode=ChatGPT account_id=ba188c18-ba20-4479-9a3f-9501307899d1
+[2026-06-18T12:38:22.441103+00:00] auth: set ChatGPT-Account-Id header: ba188c18-ba20-4479-9a3f-9501307899d1
+[2026-06-18T12:38:22.442727800+00:00] startup: wham_force_internal=false ua=codex_cli_rs/0.140.0 (Windows 10.0.26200; x86_64) unknown (codex_cloud_tasks_tui)
+[2026-06-18T12:38:22.480359200+00:00] env: parsed HTTP GitHub origin => ITI-OS-Team-2026/Mentorship-Platform
+[2026-06-18T12:38:22.489353300+00:00] env: git origins: ["https://github.com/ITI-OS-Team-2026/Mentorship-Platform.git"]
+[2026-06-18T12:38:22.489744200+00:00] env: parsed HTTP GitHub origin => ITI-OS-Team-2026/Mentorship-Platform
+[2026-06-18T12:38:22.490063+00:00] env: GET https://chatgpt.com/backend-api/wham/environments/by-repo/github/ITI-OS-Team-2026/Mentorship-Platform
+[2026-06-18T12:38:22.876349600+00:00] env: status=400 Bad Request content-type=application/json
+[2026-06-18T12:38:22.939265100+00:00] env: status=400 Bad Request content-type=application/json
+[2026-06-18T12:38:22.939834500+00:00] env: by-repo fetch failed for ITI-OS-Team-2026/Mentorship-Platform: GET https://chatgpt.com/backend-api/wham/environments/by-repo/github/ITI-OS-Team-2026/Mentorship-Platform failed: 400 Bad Request; content-type=application/json; body={"detail":{"type":"environment_repo_access_failed","message":"Codex can’t access this repository. Confirm Codex has access on GitHub and try again.","repo_full_name":"ITI-OS-Team-2026/Mentorship-Platform"}}
+[2026-06-18T12:38:22.940162200+00:00] env: GET https://chatgpt.com/backend-api/wham/environments
+[2026-06-18T12:38:23.075858400+00:00] http.list_tasks: env=<all> limit=20 cursor_in=<none> cursor_out=<none> items=0
+[2026-06-18T12:38:23.077062800+00:00] refresh.apply: env=<all> count=0
+[2026-06-18T12:38:23.345797200+00:00] env: status=200 OK content-type=application/json
+[2026-06-18T12:38:23.475553800+00:00] env: status=200 OK content-type=application/json
+[2026-06-18T12:38:23.476110800+00:00] env: /environments JSON (pretty):
+[]
