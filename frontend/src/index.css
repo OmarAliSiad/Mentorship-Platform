@@ -72,7 +72,38 @@
   /* --- Gradients (v4 allows custom background images in theme) --- */
   --background-image-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
   --background-image-aurora-purple: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.4) 0%, transparent 60%);
+
+  /* --- Animations --- */
+  --animate-aurora-drift: aurora-drift 25s ease-in-out infinite alternate;
+  --animate-fade-in-up: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-delayed: float 6s ease-in-out 3s infinite;
+  --animate-glow-pulse: glow-pulse 6s ease-in-out infinite;
+  --animate-grid-pan: grid-pan 30s linear infinite;
+
+  @keyframes aurora-drift {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    50% { transform: translate(8%, 10%) scale(1.15) rotate(5deg); }
+    100% { transform: translate(-5%, -5%) scale(0.9) rotate(-5deg); }
+  }
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-12px) rotate(1.5deg); }
+  }
+  @keyframes glow-pulse {
+    0%, 100% { filter: drop-shadow(0 0 15px rgba(129, 140, 248, 0.25)); }
+    50% { filter: drop-shadow(0 0 30px rgba(129, 140, 248, 0.5)); }
+  }
+  @keyframes grid-pan {
+    from { background-position: 0 0; }
+    to { background-position: 0 100%; }
+  }
 }
+
 
 @layer base {
   /* Style native date/time pickers to use theme colors rather than browser defaults (pure black/white) */
@@ -312,4 +343,103 @@
       transform: scale(1.08) translate3d(2%, -2%, 0);
     }
   }
+
+  /* Grid overlay pattern */
+  .bg-grid-pattern {
+    background-size: 40px 40px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  }
+
+  /* Staggered entry animation delays */
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  /* Interactive border shine */
+  .card-interactive-glow {
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-interactive-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    transition: background 0.4s ease;
+  }
+  .card-interactive-glow:hover::before {
+    background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(217, 70, 239, 0.4));
+  }
+  .card-interactive-glow:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(129, 140, 248, 0.05);
+  }
+
+  /* Custom input focus underline */
+  .input-underline-glow {
+    position: relative;
+  }
+  .input-underline-glow::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--color-accent-primary), var(--color-glow-pink));
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .input-underline-glow:focus-within::after {
+    width: 100%;
+    left: 0;
+  }
+
+  /* Slow dynamic radial lights */
+  .aurora-blur {
+    filter: blur(140px);
+    opacity: 0.75;
+    mix-blend-mode: screen;
+    animation: aurora-drift 25s ease-in-out infinite alternate;
+  }
+
+  /* Page transition styles */
+  .fade-slide-enter {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  .fade-slide-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .fade-slide-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .fade-slide-exit-active {
+    opacity: 0;
+    transform: translateY(-12px);
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
+
