@@ -284,19 +284,19 @@ function BentoCard({ icon, title, desc, className, glowClass, visual, href = '/m
 ───────────────────────────────────────────── */
 function ProcessStep({ step, title, desc, isLast }) {
   return (
-    <div className="relative flex flex-col items-center text-center gap-5 group hover:scale-[1.02] transition-transform duration-300">
+    <div className="relative flex flex-col items-center text-center gap-5">
       {/* Connector line — between cards on desktop */}
       {!isLast && (
-        <div className="hidden md:block absolute top-9 left-[calc(50%+2.5rem)] right-0 h-px bg-gradient-to-r from-white/10 via-indigo-500/20 to-transparent" />
+        <div className="hidden md:block absolute top-9 left-[calc(50%+2.5rem)] right-0 h-px bg-gradient-to-r from-border via-primary/30 to-transparent" />
       )}
 
       {/* Step bubble */}
-      <div className="relative z-10 flex size-[4.5rem] items-center justify-center rounded-full border-2 border-white/10 bg-zinc-950 shadow-[0_0_15px_rgba(129,140,248,0.15)] group-hover:shadow-[0_0_25px_rgba(129,140,248,0.35)] transition-all duration-300">
-        <span className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-pink-500 bg-clip-text text-transparent">{step}</span>
+      <div className="relative z-10 flex size-[4.5rem] items-center justify-center rounded-full border-2 border-border bg-background shadow-sm">
+        <span className="text-xl font-bold text-primary">{step}</span>
       </div>
 
-      <h3 className="text-xl font-semibold text-white">{title}</h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-xs">{desc}</p>
+      <h3 className="text-xl font-semibold text-foreground">{title}</h3>
+      <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">{desc}</p>
     </div>
   )
 }
@@ -307,7 +307,7 @@ function ProcessStep({ step, title, desc, isLast }) {
 export default function LandingPage() {
   const { t } = useTranslation()
   return (
-    <div className="bg-[#07070a] text-foreground overflow-hidden">
+    <div className="bg-background text-foreground overflow-hidden">
       {/* ────────────────────────────────────────
           Section A — Kinetic Hero
       ──────────────────────────────────────── */}
@@ -315,11 +315,10 @@ export default function LandingPage() {
         id="hero"
         className="relative overflow-hidden pt-36 pb-20"
       >
-        {/* Aurora background glows and grid overlay */}
+        {/* Aurora background glows */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 bg-grid-pattern opacity-40" />
-          <div className="absolute -top-40 -left-32 h-[45rem] w-[45rem] rounded-full bg-indigo-500/10 aurora-blur" />
-          <div className="absolute top-1/3 -right-40 h-[38rem] w-[38rem] rounded-full bg-pink-500/10 aurora-blur" style={{ animationDelay: '-8s' }} />
+          <div className="absolute -top-40 -left-32 h-[45rem] w-[45rem] rounded-full bg-primary/10 blur-[140px]" />
+          <div className="absolute top-1/3 -right-40 h-[38rem] w-[38rem] rounded-full bg-chart-1/8 blur-[130px]" />
         </div>
 
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 lg:px-16">
@@ -335,12 +334,12 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-16 lg:gap-24">
 
             {/* Left — testimonial / social proof */}
-            <div className="flex flex-col justify-between gap-8 animate-fade-in-up animation-delay-200">
+            <div className="flex flex-col justify-between gap-8">
               {/* Stars */}
               <div>
                 <div className="mb-4 flex gap-1" aria-label={t('landing.testimonial.stars')}>
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <svg key={i} className="size-5 text-indigo-400 filter drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <svg key={i} className="size-5 text-primary" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ))}
@@ -357,9 +356,9 @@ export default function LandingPage() {
 
               {/* Pagination dots */}
               <div className="flex items-center gap-2">
-                <div className="h-1.5 w-6 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 shadow-[0_0_10px_rgba(129,140,248,0.5)]" />
-                <div className="h-1.5 w-3 rounded-full bg-zinc-800" />
-                <div className="h-1.5 w-3 rounded-full bg-zinc-800" />
+                <div className="h-1 w-6 rounded-full bg-primary" />
+                <div className="h-1 w-3 rounded-full bg-border" />
+                <div className="h-1 w-3 rounded-full bg-border" />
               </div>
             </div>
 
@@ -404,15 +403,11 @@ export default function LandingPage() {
         className="border-y border-border py-20"
         aria-label={t('landing.metrics.label')}
       >
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/2 left-1/3 h-[25rem] w-[25rem] rounded-full bg-violet-500/5 aurora-blur" style={{ animationDelay: '-15s' }} />
-        </div>
-
-        <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-16">
+        <div className="mx-auto max-w-7xl px-6 lg:px-16">
           <div className="grid grid-cols-1 gap-12 md:grid-cols-[1fr_1.4fr] md:gap-20">
 
             {/* Left — narrative copy */}
-            <div className="flex flex-col justify-center gap-5 text-sm leading-relaxed text-zinc-400 max-w-sm">
+            <div className="flex flex-col justify-center gap-5 text-sm leading-relaxed text-muted-foreground max-w-sm">
               <p>
                 {t('landing.metrics.copy1')}
               </p>
@@ -430,10 +425,10 @@ export default function LandingPage() {
               ].map(({ value, desc }) => (
                 <div
                   key={value}
-                  className="flex items-baseline justify-between gap-6 border-t border-white/10 py-6 first:border-t-0 hover:scale-[1.01] transition-transform duration-250"
+                  className="flex items-baseline justify-between gap-6 border-t border-border py-6 first:border-t-0"
                 >
-                  {/* Big value with neon gradient text */}
-                  <span className="text-[clamp(2.8rem,6vw,4rem)] font-extrabold leading-none tracking-tight bg-gradient-to-r from-indigo-400 to-pink-500 bg-clip-text text-transparent filter drop-shadow-[0_0_10px_rgba(129,140,248,0.25)]">
+                  {/* Big value */}
+                  <span className="text-[clamp(2.8rem,6vw,4rem)] font-extrabold leading-none tracking-tight text-primary">
                     {value}
                   </span>
                   {/* Right-aligned descriptor */}
@@ -453,7 +448,7 @@ export default function LandingPage() {
       ──────────────────────────────────────── */}
       <section id="stack" className="relative py-28">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute right-0 top-1/4 h-[35rem] w-[35rem] rounded-full bg-indigo-500/5 aurora-blur" />
+          <div className="absolute right-0 top-1/4 h-[30rem] w-[30rem] rounded-full bg-chart-1/8 blur-[110px]" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-16">
@@ -467,7 +462,7 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          {/* Asymmetrical bento grid with floating delays */}
+          {/* Asymmetrical bento grid */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6 [grid-auto-rows:13rem]">
             {/* Frontend — large (2 cols × 2 rows) */}
             <BentoCard
@@ -534,12 +529,8 @@ export default function LandingPage() {
       ──────────────────────────────────────── */}
       <section
         id="how-it-works"
-        className="relative border-y border-white/5 bg-zinc-950/20 py-28"
+        className="relative border-y border-border bg-muted/20 py-28"
       >
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute bottom-0 right-1/4 h-[30rem] w-[30rem] rounded-full bg-pink-500/5 aurora-blur" style={{ animationDelay: '-18s' }} />
-        </div>
-
         <div className="mx-auto max-w-7xl px-6 lg:px-16">
           {/* Section header */}
           <div className="mb-20 text-center">
@@ -579,7 +570,7 @@ export default function LandingPage() {
       <section id="cta" className="relative overflow-hidden py-28">
         {/* Soft background glow */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/2 top-0 h-[35rem] w-[50rem] -translate-x-1/2 rounded-full bg-indigo-500/5 aurora-blur" />
+          <div className="absolute left-1/2 top-0 h-[35rem] w-[50rem] -translate-x-1/2 rounded-full bg-primary/8 blur-[130px]" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-5xl px-6">
@@ -593,7 +584,7 @@ export default function LandingPage() {
                 {[80, 72, 64].map((w, i) => (
                   <div
                     key={i}
-                    className="h-2.5 rounded-sm border border-indigo-500/20 bg-indigo-500/10"
+                    className="h-2.5 rounded-sm border border-primary/30 bg-primary/15"
                     style={{ width: `${w}px` }}
                   />
                 ))}
@@ -620,10 +611,10 @@ export default function LandingPage() {
           </div>
 
           {/* ── Bottom: split preview card ── */}
-          <div className="overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/40 backdrop-blur-md shadow-2xl md:flex card-interactive-glow">
+          <div className="overflow-hidden rounded-3xl border border-border/60 bg-card/60 backdrop-blur-sm shadow-2xl md:flex">
 
             {/* Left — dashboard preview */}
-            <div className="relative min-h-[280px] flex-1 overflow-hidden bg-zinc-950/30 md:min-h-[360px] border-r border-white/5">
+            <div className="relative min-h-[280px] flex-1 overflow-hidden bg-muted/30 md:min-h-[360px]">
               {/* Fake browser chrome */}
               <div className="absolute inset-0 flex flex-col">
                 <div className="flex items-center gap-1.5 border-b border-border/60 bg-card/80 px-4 py-2.5">
@@ -635,22 +626,22 @@ export default function LandingPage() {
                   </div>
                 </div>
                 {/* Fake dashboard content */}
-                <div className="flex-1 p-4 space-y-3 overflow-hidden bg-grid-pattern bg-[size:20px_20px]">
+                <div className="flex-1 p-4 space-y-2.5 overflow-hidden">
                   <div className="flex gap-3">
                     <div className="flex flex-col gap-1.5 flex-1">
-                      <div className="h-2 w-20 rounded bg-indigo-500/20" />
-                      <div className="h-2 w-28 rounded bg-zinc-800" />
+                      <div className="h-2 w-20 rounded bg-muted-foreground/20" />
+                      <div className="h-2 w-28 rounded bg-muted-foreground/15" />
                     </div>
-                    <div className="h-6 w-16 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-[10px] text-indigo-400 font-semibold flex items-center justify-center">Active</div>
+                    <div className="h-6 w-16 rounded-full bg-primary/30" />
                   </div>
                   {[90, 75, 60, 80, 65, 50].map((w, i) => (
-                    <div key={i} className="flex items-center gap-2 hover:bg-white/5 p-1 rounded-lg transition-colors">
-                      <div className="size-6 rounded-full bg-zinc-800 shrink-0 border border-white/5 flex items-center justify-center text-[8px] text-zinc-500 font-bold">{i+1}</div>
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="size-6 rounded-full bg-muted-foreground/15 shrink-0" />
                       <div className="flex-1 space-y-1">
-                        <div className="h-1.5 rounded bg-zinc-700" style={{ width: `${w}%` }} />
-                        <div className="h-1 rounded bg-indigo-500/20" style={{ width: `${w * 0.4}%` }} />
+                        <div className="h-1.5 rounded bg-muted-foreground/20" style={{ width: `${w}%` }} />
+                        <div className="h-1.5 rounded bg-muted-foreground/12" style={{ width: `${w * 0.6}%` }} />
                       </div>
-                      <div className="h-5 w-12 rounded-full bg-zinc-900/80 border border-white/5" />
+                      <div className="h-5 w-12 rounded-full bg-border/60" />
                     </div>
                   ))}
                 </div>
@@ -660,7 +651,7 @@ export default function LandingPage() {
             </div>
 
             {/* Right — checklist + CTA */}
-            <div className="flex flex-col justify-between gap-8 bg-black/40 p-8 md:w-72 lg:w-80 shrink-0">
+            <div className="flex flex-col justify-between gap-8 bg-card/80 p-8 md:w-72 lg:w-80 shrink-0">
               <div>
                 <p className="mb-5 text-sm font-semibold text-foreground">
                   {t('landing.cta.talkTitle')}
@@ -672,12 +663,12 @@ export default function LandingPage() {
                     t('landing.cta.checklist3'),
                     t('landing.cta.checklist4'),
                   ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-xs text-zinc-400">
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-muted-foreground">
                       <svg
                         viewBox="0 0 16 16"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
-                        className="mt-0.5 size-4 shrink-0 text-indigo-400"
+                        className="mt-0.5 size-4 shrink-0 text-primary"
                         aria-hidden="true"
                       >
                         <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
@@ -690,7 +681,7 @@ export default function LandingPage() {
 
               {/* CTA + avatars */}
               <div className="space-y-4">
-                <Button asChild size="lg" className="w-full gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:shadow-[0_0_20px_rgba(129,140,248,0.3)] transition-all">
+                <Button asChild size="lg" className="w-full gap-2">
                   <Link to="/login">
                     {t('landing.cta.ctaButton')}
                     <ArrowRight className="size-4 rtl:rotate-180" />
@@ -703,7 +694,7 @@ export default function LandingPage() {
                     {['S', 'A', 'R', 'M'].map((initial, i) => (
                       <div
                         key={i}
-                        className="inline-flex size-8 items-center justify-center rounded-full border-2 border-zinc-950 bg-indigo-500/20 text-[10px] font-bold text-indigo-400 ring-0"
+                        className="inline-flex size-8 items-center justify-center rounded-full border-2 border-card bg-primary/20 text-[10px] font-bold text-primary ring-0"
                         aria-hidden="true"
                       >
                         {initial}
