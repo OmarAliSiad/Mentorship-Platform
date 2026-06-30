@@ -1,106 +1,212 @@
-# Mentorship Platform
+# Mentorship-Platform
 
-A full-stack mentorship platform built with **React**, **Vite**, **Express.js**, and **MongoDB**. It enables students to connect with mentors, schedule mentorship sessions, and provides an admin dashboard for platform management.
+![GitHub stars](https://img.shields.io/github/stars/OmarAliSiad/Mentorship-Platform?style=for-the-badge&logo=github) ![GitHub forks](https://img.shields.io/github/forks/OmarAliSiad/Mentorship-Platform?style=for-the-badge&logo=github) ![GitHub issues](https://img.shields.io/github/issues/OmarAliSiad/Mentorship-Platform?style=for-the-badge&logo=github) ![Last commit](https://img.shields.io/github/last-commit/OmarAliSiad/Mentorship-Platform?style=for-the-badge&logo=github) ![npm version](https://img.shields.io/npm/v/backend?style=for-the-badge&logo=npm&logoColor=white) ![npm downloads](https://img.shields.io/npm/dm/backend?style=for-the-badge&logo=npm&logoColor=white) ![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=white) ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white) ![License](https://img.shields.io/badge/license-ISC-green?style=for-the-badge)
 
-## Features
+## 📑 Table of Contents
 
-* Student, Mentor, and Admin dashboards
-* JWT Authentication
-* Mentor profile management
-* Session booking
-* Responsive UI
-* RESTful API
+- [📝 Description](#-description)
+- [📸 Screenshots](#-screenshots)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [🏗️ Architecture](#️-architecture)
+- [⚡ Quick Start](#-quick-start)
+- [📦 Key Dependencies](#-key-dependencies)
+- [🚀 Available Scripts](#-available-scripts)
+- [🌐 API Endpoints](#-api-endpoints)
+- [📁 Project Structure](#-project-structure)
+- [🛠️ Development Setup](#️-development-setup)
+- [👥 Contributors](#-contributors)
+- [🤝 Contributing](#-contributing)
+- [📜 License](#-license)
 
-## Tech Stack
+## 📝 Description
 
-### Frontend
+Mentorship-Platform — a backend api built with Express.js, JavaScript, MongoDB, Vite.
 
-* React
-* Vite
-* Tailwind CSS
-* Zustand
-* Axios
+## 📸 Screenshots
 
-### Backend
+![admin dashboard](https://raw.githubusercontent.com/OmarAliSiad/Mentorship-Platform/main/frontend/src/assets/images/admin_dashboard.png)
 
-* Node.js
-* Express.js
-* MongoDB
-* Mongoose
-* JWT
-* bcryptjs
+![admin stacks](https://raw.githubusercontent.com/OmarAliSiad/Mentorship-Platform/main/frontend/src/assets/images/admin_stacks.png)
 
-## Getting Started
+![admin statistics](https://raw.githubusercontent.com/OmarAliSiad/Mentorship-Platform/main/frontend/src/assets/images/admin_statistics.png)
 
-### Prerequisites
+![admin users](https://raw.githubusercontent.com/OmarAliSiad/Mentorship-Platform/main/frontend/src/assets/images/admin_users.png)
 
-* Node.js 18+
-* MongoDB
+![mentorship dashboard](https://raw.githubusercontent.com/OmarAliSiad/Mentorship-Platform/main/frontend/src/assets/images/mentorship_dashboard.png)
 
-### Installation
+![mentorship history](https://raw.githubusercontent.com/OmarAliSiad/Mentorship-Platform/main/frontend/src/assets/images/mentorship_history.png)
 
-Clone the repository:
+## 🛠️ Tech Stack
+
+- 🚀 **Express.js**
+- 🟨 **JavaScript**
+- 🍃 **MongoDB**
+- ⚡ **Vite**
+
+**Notable libraries:** Mongoose
+
+## 🏗️ Architecture
+
+A high-level view of how the main pieces fit together:
+
+```mermaid
+flowchart TD
+    User["👤 User / Browser"]
+    API["⚙️ Express API"]
+    User --> API
+    DB[("🗄️ MongoDB")]
+    API --> DB
+```
+
+## ⚡ Quick Start
 
 ```bash
+
+# 1. Clone the repository
 git clone https://github.com/OmarAliSiad/Mentorship-Platform.git
-cd Mentorship-Platform
-```
 
-Install backend dependencies:
-
-```bash
-cd Backend
+# 2. Install dependencies
 npm install
-```
 
-Install frontend dependencies:
-
-```bash
-cd ../frontend
-npm install
-```
-
-## Running the Project
-
-Start the backend:
-
-```bash
-cd Backend
+# 3. Start the dev server
 npm run dev
 ```
 
-Start the frontend:
-
-```bash
-cd frontend
-npm run dev
-```
-
-The frontend will be available at:
+## 📦 Key Dependencies
 
 ```
-http://localhost:5173
+bcryptjs: ^3.0.3
+cors: ^2.8.6
+dotenv: ^17.4.2
+express: ^5.2.1
+jsonwebtoken: ^9.0.3
+mongoose: ^9.7.0
 ```
 
-The backend API will run on:
+## 🚀 Available Scripts
+
+- **dev** — `npm run dev`
+
+## 🌐 API Endpoints
+
+Detected endpoints (best-effort scan):
 
 ```
-http://localhost:5000
+GET /api/health
 ```
 
-## Project Structure
+## 📁 Project Structure
 
 ```
-Mentorship-Platform/
-├── Backend/
-│   ├── src/
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   └── package.json
-└── README.md
+.
+├── Backend
+│   ├── package.json
+│   ├── server.js
+│   └── src
+│       ├── config
+│       │   └── db.js
+│       ├── controllers
+│       │   ├── authController.js
+│       │   ├── mentorController.js
+│       │   └── studentController.js
+│       ├── middleware
+│       │   └── authMiddleware.js
+│       ├── models
+│       │   ├── MentorAvailability.js
+│       │   ├── MentorProfile.js
+│       │   ├── Session.js
+│       │   ├── Stack.js
+│       │   └── User.js
+│       └── routes
+│           ├── adminRoutes.js
+│           ├── authRoutes.js
+│           ├── mentorRoutes.js
+│           ├── stackRoutes.js
+│           └── studentRoutes.js
+├── design.md
+├── frontend
+│   ├── components.json
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── jsconfig.json
+│   ├── package.json
+│   ├── src
+│   │   ├── App.jsx
+│   │   ├── assets
+│   │   │   └── images
+│   │   │       ├── admin_dashboard.png
+│   │   │       ├── admin_stacks.png
+│   │   │       ├── admin_statistics.png
+│   │   │       ├── admin_users.png
+│   │   │       ├── mentorship_dashboard.png
+│   │   │       ├── mentorship_history.png
+│   │   │       ├── mentorship_mentor.png
+│   │   │       └── students_dashboard.png
+│   │   ├── components
+│   │   │   └── ui
+│   │   │       ├── button.jsx
+│   │   │       ├── pagination.jsx
+│   │   │       ├── select.jsx
+│   │   │       ├── skeleton.jsx
+│   │   │       └── sonner.jsx
+│   │   ├── index.css
+│   │   ├── layouts
+│   │   │   ├── FloatingNav.jsx
+│   │   │   ├── MinimalistFooter.jsx
+│   │   │   └── PublicLayout.jsx
+│   │   ├── lib
+│   │   │   └── utils.js
+│   │   ├── main.jsx
+│   │   ├── pages
+│   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── AuthPage.jsx
+│   │   │   ├── LandingPage.jsx
+│   │   │   ├── MentorDashboard.jsx
+│   │   │   ├── MentorProfile.jsx
+│   │   │   ├── MentorSearch.jsx
+│   │   │   ├── NotFound.jsx
+│   │   │   └── StudentDashboard.jsx
+│   │   └── store
+│   │       ├── authStore.js
+│   │       └── themeStore.js
+│   └── vite.config.js
+├── overview.md
+└── prd.md
 ```
 
-## License
+## 🛠️ Development Setup
 
-This project is licensed under the ISC License.
+### Node.js / JavaScript
+1. Install Node.js (v18+ recommended)
+2. Install dependencies: `npm install` (or `yarn` / `pnpm install` / `bun install`)
+3. Start the dev server: see the **Quick Start** above
+
+## 👥 Contributors
+
+Thanks to everyone who has contributed to this project:
+
+<p align="left">
+<a href="https://github.com/mohamedahmed-dev" title="mohamedahmed-dev"><img src="https://avatars.githubusercontent.com/u/214737066?v=4&s=64" width="64" height="64" alt="mohamedahmed-dev" style="border-radius:50%" /></a>
+<a href="https://github.com/OmarAliSiad" title="OmarAliSiad"><img src="https://avatars.githubusercontent.com/u/105920279?v=4&s=64" width="64" height="64" alt="OmarAliSiad" style="border-radius:50%" /></a>
+<a href="https://github.com/ahmed-azab271" title="ahmed-azab271"><img src="https://avatars.githubusercontent.com/u/199368679?v=4&s=64" width="64" height="64" alt="ahmed-azab271" style="border-radius:50%" /></a>
+<a href="https://github.com/Ramadan-Elgamal" title="Ramadan-Elgamal"><img src="https://avatars.githubusercontent.com/u/107793891?v=4&s=64" width="64" height="64" alt="Ramadan-Elgamal" style="border-radius:50%" /></a>
+</p>
+
+[See the full list of contributors →](https://github.com/OmarAliSiad/Mentorship-Platform/graphs/contributors)
+
+## 👥 Contributing
+
+Contributions are welcome! Here's the standard flow:
+
+1. **Fork** the repository
+2. **Clone** your fork: `git clone https://github.com/OmarAliSiad/Mentorship-Platform.git`
+3. **Branch**: `git checkout -b feature/your-feature`
+4. **Commit**: `git commit -m 'feat: add some feature'`
+5. **Push**: `git push origin feature/your-feature`
+6. **Open** a pull request
+
+Please follow the existing code style and include tests for new behavior where applicable.
+
+## 📜 License
+
+This project is licensed under the **ISC** License.
